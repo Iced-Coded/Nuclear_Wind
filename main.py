@@ -1,9 +1,12 @@
-import pygame, pygame_gui, math, random
+import pygame, pygame_gui, math, random, sys
 from pygame_gui.core import ObjectID
-from pygame_gui.elements import UIButton, UILabel
+from pygame_gui.elements import UIButton, UILabel, UIPanel
 
-# Better hope my dumb ass doesn't forget about this debug shit
-debug = True
+debug = False
+if sys.gettrace() is None:
+    pass
+else:
+    debug = True
 
 # Initializing pygame
 pygame.init()
@@ -23,6 +26,7 @@ main_menu_sound = pygame.mixer.Sound('data/sounds/mainmenu.mp3')
 hover_sound_1 = pygame.mixer.Sound('data/sounds/main_menu/Retro1.mp3')
 hover_sound_2 = pygame.mixer.Sound('data/sounds/main_menu/Retro2.mp3')
 walk_sound = pygame.mixer.Sound('data/sounds/movement/Steps.wav')
+debug_active_sound = pygame.mixer.Sound('data/sounds/synth.wav')
 
 # Image library
 bg = pygame.image.load("data/sprites/bg.jpg")
@@ -32,6 +36,7 @@ plains_tile = pygame.image.load('data/sprites/tiles/plains.png')
 main_manager = pygame_gui.UIManager((screen_width, screen_height), 'theme.json')
 menu_manager = pygame_gui.UIManager((screen_width, screen_height), 'theme.json')
 options_manager = pygame_gui.UIManager((screen_width, screen_height), 'theme.json')
+text_manager = pygame_gui.UIManager((screen_width, screen_height), 'theme.json')
 
 # Variables
 clock = pygame.time.Clock()
@@ -42,6 +47,10 @@ options = False
 dt = 0
 is_in_a_start_position = False
 is_paused = False
+
+# Game (Character) Variables
+health = 0
+hunger = 100
 
 # Buttons and other shit
 font_large = pygame.font.Font(None, 36)
@@ -122,6 +131,12 @@ quit_button = UIButton(
     manager=menu_manager
 )
 
+version_label = UILabel(
+    relative_rect=pygame.Rect((screen_width - button_width) // 0.1, 500, button_width, button_height),
+    text='1.0a',
+    manager=menu_manager
+)
+
 # END OF MAIN MENU BUTTONS
 
 # START OF OPTION MENU BUTTONS
@@ -141,6 +156,25 @@ options_exit_button = UIButton(
 
 # END OF OPTION MENU BUTTONS
 
+# START OF MAIN GAME PANEL
+
+main_panel = UIPanel(pygame.Rect(675, -3, 610, 730),
+                     manager=main_manager)
+UILabel(pygame.Rect(245, 10, 150, 30),
+        text='Nuclear Wind 1.0a',
+        manager=main_manager,
+        container=main_panel)
+UILabel(pygame.Rect(10, 45, 150, 30),
+        text=f'Health: {health}',
+        manager=main_manager,
+        container=main_panel)
+hunger_label = UILabel(pygame.Rect(10, 75, 150, 30),
+        text=f'Hunger: {hunger}',
+        manager=main_manager,
+        container=main_panel)
+
+# END OF MAIN GAME PANEL
+
 # Just existing for one class
 player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
 
@@ -149,6 +183,7 @@ if debug:
     main_menu = False
     playing = True
     options = False
+    debug_active_sound.play()
 
 # Initialize player class and blah blah blah. I don't really give a shit
 class Player(pygame.sprite.Sprite):
@@ -169,6 +204,10 @@ player.add(Player(60, 75))
 
 # That's when shit hits the fan. a.k.a. main code
 while running:
+    debug_0 = False
+    debug_1 = False
+    debug_2 = False
+    debug_3 = False
     # Thingy for letting players quit the game,
     # since, I want them to leave me as fast as they can
     for event in pygame.event.get():
@@ -181,11 +220,45 @@ while running:
                 elif options:
                     options = False
                     main_menu = True
+            if event.key == pygame.K_KP0:
+                if not debug_0:
+                    debug_0 = True
+                    main_manager.set_visual_debug_mode(True)
+                elif debug_0:
+                    debug_0 = False
+                    main_manager.set_visual_debug_mode(False)
+            if event.key == pygame.K_KP1:
+                if not debug_1:
+                    debug_1 = True
+                    menu_manager.set_visual_debug_mode(True)
+                elif debug_1:
+                    debug_1 = False
+                    menu_manager.set_visual_debug_mode(False)
+            if event.key == pygame.K_KP2:
+                if not debug_2:
+                    debug_2 = True
+                    options_manager.set_visual_debug_mode(True)
+                elif debug_2:
+                    debug_2 = False
+                    options_manager.set_visual_debug_mode(False)
+            if event.key == pygame.K_KP3:
+                if not debug_3:
+                    debug_3 = True
+                    main_manager.set_visual_debug_mode(True)
+                elif debug_3:
+                    debug_3 = False
+                    main_manager.set_visual_debug_mode(False)
+            if event.key == pygame.K_i:
+                if playing:
+                    pass
+                else:
+                    pass
         # I don't fucking know why we're initializing all the gui managers HERE
         # but I guess we need to do it firstly, above everyone else (such a narcissist)
         main_manager.process_events(event)
         menu_manager.process_events(event)
         options_manager.process_events(event)
+        text_manager.process_events(event)
 
     # Main game, not menu or other shit
     if playing and not options and not main_menu:
@@ -207,9 +280,17 @@ while running:
                             if dist <= threshold:
                                 sprite.rect.center = button.rect.center
                                 walk_sound.play()
+                                hunger -= 1
+                                print(hunger)
+                                hunger_label.hide()
+                                hunger_label = UILabel(pygame.Rect(10, 75, 150, 30),
+                                                       text=f'Hunger: {hunger}',
+                                                       manager=main_manager,
+                                                       container=main_panel)
 
         # Update menu, since, we NEED to do that.
         main_manager.update(dt)
+        main_panel.update(dt)
 
         # just so the screen isn't black, yknow?
         screen.fill((255, 255, 255))  # Use RGB tuple for color
@@ -226,6 +307,7 @@ while running:
 
     # main menu
     elif main_menu:
+        options = False
         # Just so the player doesn't go insane due to a lot of guitar sounds
         if not pygame.mixer.get_busy():
             main_menu_sound.play(-1)
