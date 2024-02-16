@@ -1,7 +1,43 @@
 {
-  "elements": {
-    "@movement": {
-      "normal_bg": "0, 0, 0, 128"
+     "button":
+     {
+         "misc":
+         {
+             "border_width": "1",
+             "shadow_width": "2"
+         }
+    },
+    "@movement":
+     {
+         "misc":
+         {
+             "shadow_width": "0",
+             "shape": "rectangle",
+            "border_width": "0"
+         },
+         "colours":
+         {
+            "normal_bg": "#00000000",
+            "hovered_bg": "#00000000",
+            "disabled_bg": "#00000000",
+            "selected_bg": "#00000000",
+            "dark_bg": "#00000000",
+            "normal_text": "#00000000",
+            "hovered_text": "#00000000",
+            "selected_text": "#00000000",
+            "disabled_text": "#00000000",
+            "link_text": "#00000000",
+            "link_hover": "#00000000",
+            "link_selected": "#00000000",
+            "text_shadow": "#00000000",
+            "normal_border": "#00000000"
+         }
+    },
+    "#hello_button":
+     {
+         "misc":
+         {
+             "text_horiz_alignment": "left"
+         }
     }
-  },
 }

@@ -1,4 +1,4 @@
-import pygame, pygame_gui, math, random, sys
+import pygame, pygame_gui, math, random, sys, json
 from pygame_gui.core import ObjectID
 from pygame_gui.elements import UIButton, UILabel, UIPanel
 
@@ -27,6 +27,8 @@ hover_sound_1 = pygame.mixer.Sound('data/sounds/main_menu/Retro1.mp3')
 hover_sound_2 = pygame.mixer.Sound('data/sounds/main_menu/Retro2.mp3')
 walk_sound = pygame.mixer.Sound('data/sounds/movement/Steps.wav')
 debug_active_sound = pygame.mixer.Sound('data/sounds/synth.wav')
+power_up_sound = pygame.mixer.Sound('data/sounds/Powerup.wav')
+hurt_sound = pygame.mixer.Sound('data/sounds/Hurt.wav')
 
 # Image library
 bg = pygame.image.load("data/sprites/bg.jpg")
@@ -48,9 +50,10 @@ dt = 0
 is_in_a_start_position = False
 is_paused = False
 
-# Game (Character) Variables
-health = 0
+# Player var
+health = 100
 hunger = 100
+food = 10
 
 # Buttons and other shit
 font_large = pygame.font.Font(None, 36)
@@ -168,12 +171,28 @@ UILabel(pygame.Rect(10, 45, 150, 30),
         text=f'Health: {health}',
         manager=main_manager,
         container=main_panel)
-hunger_label = UILabel(pygame.Rect(10, 75, 150, 30),
+hunger_label = UILabel(pygame.Rect(17, 75, 150, 30),
         text=f'Hunger: {hunger}',
+        manager=main_manager,
+        container=main_panel)
+canned_food = UILabel(pygame.Rect(32, 106, 150, 30),
+        text=f'Canned Food: {food}',
+        manager=main_manager,
+        container=main_panel)
+eat_food = UIButton(pygame.Rect(45, 140, 150, 30),
+        text='Eat Canned Food',
         manager=main_manager,
         container=main_panel)
 
 # END OF MAIN GAME PANEL
+
+# Pause menu
+
+#pause_panel_bg = UIPanel(pygame.Rect(0, 0, 360, 480),
+#                      manager=main_manager,
+#                      anchors={'center':'center'})
+
+# Pause Menu end
 
 # Just existing for one class
 player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
@@ -197,13 +216,51 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = player_pos.x
         self.rect.y = player_pos.y
+        self.health = health
+        self.hunger = hunger
+        self.food = food
 
 # Initialize player in graphics idk
 player = pygame.sprite.Group()
 player.add(Player(60, 75))
 
+options_button.disable()
+
 # That's when shit hits the fan. a.k.a. main code
 while running:
+
+    def save(sprite):
+        dic = {
+            "Player_Pos": sprite.rect.center,
+            "Health": health,
+            "Hunger": hunger,
+            "Canned_Food": food
+        }
+
+        json_object = json.dumps(dic, indent=4)
+
+        # Writing to sample.json
+        with open("save.json", "w") as outfile:
+            outfile.write(json_object)
+
+    def load(sprite):
+        try:
+            with open('save.json') as save_file:
+                data = json.load(save_file)  # Load data and close file automatically
+                sprite.health = data.get("Health", sprite.health)  # Set default if missing
+                sprite.hunger = data.get("Hunger", sprite.hunger)
+                sprite.rect.center = data.get("Player_Pos", sprite.rect.center)  # Handle as tuple
+                sprite.food = data.get("Canned_Food", sprite.food)
+
+        except FileNotFoundError:
+            print("Save file not found. Continuing with default values.")
+
+        # Print loaded values for confirmation (optional)
+        print(f"Hunger: {sprite.hunger}")
+        print(f"Health: {sprite.health}")
+        print(f"Player Position: {sprite.rect.center}")
+        print(f"Canned Food: {sprite.food}")
+
     debug_0 = False
     debug_1 = False
     debug_2 = False
@@ -221,31 +278,31 @@ while running:
                     options = False
                     main_menu = True
             if event.key == pygame.K_KP0:
-                if not debug_0:
+                if not debug_0 and debug:
                     debug_0 = True
                     main_manager.set_visual_debug_mode(True)
-                elif debug_0:
+                elif debug_0 and debug:
                     debug_0 = False
                     main_manager.set_visual_debug_mode(False)
             if event.key == pygame.K_KP1:
-                if not debug_1:
+                if not debug_1 and debug:
                     debug_1 = True
                     menu_manager.set_visual_debug_mode(True)
-                elif debug_1:
+                elif debug_1 and debug:
                     debug_1 = False
                     menu_manager.set_visual_debug_mode(False)
             if event.key == pygame.K_KP2:
-                if not debug_2:
+                if not debug_2 and debug:
                     debug_2 = True
                     options_manager.set_visual_debug_mode(True)
-                elif debug_2:
+                elif debug_2 and debug:
                     debug_2 = False
                     options_manager.set_visual_debug_mode(False)
             if event.key == pygame.K_KP3:
-                if not debug_3:
+                if not debug_3 and debug:
                     debug_3 = True
                     main_manager.set_visual_debug_mode(True)
-                elif debug_3:
+                elif debug_3 and debug:
                     debug_3 = False
                     main_manager.set_visual_debug_mode(False)
             if event.key == pygame.K_i:
@@ -258,7 +315,6 @@ while running:
         main_manager.process_events(event)
         menu_manager.process_events(event)
         options_manager.process_events(event)
-        text_manager.process_events(event)
 
     # Main game, not menu or other shit
     if playing and not options and not main_menu:
@@ -269,6 +325,22 @@ while running:
         # Buttons and other events
         for event in pygame.event.get():
             if event.type == pygame_gui.UI_BUTTON_PRESSED:
+                if event.ui_element == eat_food:
+                    if food >= 1:
+                        food -= 1
+                        hunger += random.randint(10, 25)
+                        hunger_label.hide()
+                        hunger_label = UILabel(pygame.Rect(13, 75, 150, 30),
+                                               text=f'Hunger: {hunger}',
+                                               manager=main_manager,
+                                               container=main_panel)
+                        canned_food.hide()
+                        canned_food = UILabel(pygame.Rect(32, 106, 150, 30),
+                                              text=f'Canned Food: {food}',
+                                              manager=main_manager,
+                                              container=main_panel)
+                    else:
+                        pass
                 for button in buttons:
                     if event.ui_element == button:
                         for sprite in player.sprites():
@@ -283,10 +355,16 @@ while running:
                                 hunger -= 1
                                 print(hunger)
                                 hunger_label.hide()
-                                hunger_label = UILabel(pygame.Rect(10, 75, 150, 30),
+                                hunger_label = UILabel(pygame.Rect(13, 75, 150, 30),
                                                        text=f'Hunger: {hunger}',
                                                        manager=main_manager,
                                                        container=main_panel)
+                                if hunger >= 50:
+                                    health += 1
+                                elif hunger <= 25:
+                                    health -= random.randint(1, 3)
+                                save(sprite)
+                                load(sprite)
 
         # Update menu, since, we NEED to do that.
         main_manager.update(dt)
@@ -320,18 +398,19 @@ while running:
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == start_button:
-                        print("Start Game")
+                        #print("Start Game")
                         confirm_sound.play()
                         main_menu_sound.stop()
                         main_menu = False
                         playing = True
                     elif event.ui_element == options_button:
-                        print("Options")
-                        confirm_sound.play()
-                        main_menu = False
-                        options = True
+                        hurt_sound.play()
+                        #print("Options")
+                        #confirm_sound.play()
+                        #main_menu = False
+                        #options = True
                     elif event.ui_element == quit_button:
-                        print("Quit!")
+                        #print("Quit!")
                         confirm_sound.play()
                         running = False
                 elif event.user_type == pygame_gui.UI_BUTTON_ON_HOVERED:
@@ -344,20 +423,20 @@ while running:
         menu_manager.draw_ui(screen)
 
     # CAUTION! MY SMALL BRAIN STILL DIDN'T FIXED THIS
-    elif options:
-        main_menu = False
+    #elif options:
+    #    main_menu = False
+    #
+    #    options_manager.update(dt)
+    #
+    #    for event in pygame.event.get():
+    #        if event.type == pygame.USEREVENT:
+    #            if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+    #                confirm_sound.play()
+    #                if event.ui_element == options_exit_button:
+    #                    options = False
+    #                    main_menu = True
 
-        options_manager.update(dt)
-
-        for event in pygame.event.get():
-            if event.type == pygame.USEREVENT:
-                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
-                    confirm_sound.play()
-                    if event.ui_element == options_exit_button:
-                        options = False
-                        main_menu = True
-
-        options_manager.draw_ui(screen)
+    #    options_manager.draw_ui(screen)
 
     # Sadly our game is not for australians
     pygame.display.flip()
