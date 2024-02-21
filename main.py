@@ -224,7 +224,7 @@ class Player(pygame.sprite.Sprite):
         self.hunger = hunger
         self.food = food
 
-# Initialize player in rendering engine
+# Initialize player in rendering
 player = pygame.sprite.Group()
 player.add(Player(60, 75))
 
