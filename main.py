@@ -14,7 +14,7 @@ pygame.init()
 # Initial screen manipulations
 screen_width = 1280
 screen_height = 720
-icon = pygame.transform.scale(pygame.image.load('snow.png'),(200, 200))
+icon = pygame.transform.smoothscale(pygame.image.load('snow.png'), (200,200))
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("Nuclear Wind 1.0a")
 pygame.display.set_icon(icon)
@@ -32,7 +32,8 @@ hurt_sound = pygame.mixer.Sound('data/sounds/Hurt.wav')
 
 # Image library
 bg = pygame.image.load("data/sprites/bg.jpg")
-plains_tile = pygame.image.load('data/sprites/tiles/plains.png')
+plains_tile = pygame.transform.smoothscale(pygame.image.load('data/sprites/tiles/plains.png'), (100,100))
+forest_time = pygame.transform.smoothscale(pygame.image.load('data/sprites/tiles/forest.png'), (100,100))
 
 # GUI managers
 main_manager = pygame_gui.UIManager((screen_width, screen_height), 'theme.json')
@@ -74,7 +75,7 @@ movement_button_width = 100
 movement_button_height = 100
 start_x = 35
 start_y = 35
-margin = 2.5
+margin = 2
 
 # Movement system addition
 
@@ -194,7 +195,7 @@ eat_food = UIButton(pygame.Rect(45, 140, 150, 30),
 
 # Pause Menu end
 
-# Just existing for one class
+# Position of a player
 player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
 
 # If debug mode is active then skip main menu
@@ -204,7 +205,7 @@ if debug:
     options = False
     debug_active_sound.play()
 
-# Initialize player class and blah blah blah. I don't really give a shit
+# Initialize player class and player's sprites (unused)
 class Player(pygame.sprite.Sprite):
     def __init__(self, width, height):
         pygame.sprite.Sprite.__init__(self)
@@ -220,13 +221,13 @@ class Player(pygame.sprite.Sprite):
         self.hunger = hunger
         self.food = food
 
-# Initialize player in graphics idk
+# Initialize player in rendering engine
 player = pygame.sprite.Group()
 player.add(Player(60, 75))
 
 options_button.disable()
 
-# That's when shit hits the fan. a.k.a. main code
+# Main game code.
 while running:
 
     def save(sprite):
@@ -255,7 +256,6 @@ while running:
         except FileNotFoundError:
             print("Save file not found. Continuing with default values.")
 
-        # Print loaded values for confirmation (optional)
         print(f"Hunger: {sprite.hunger}")
         print(f"Health: {sprite.health}")
         print(f"Player Position: {sprite.rect.center}")
@@ -265,8 +265,7 @@ while running:
     debug_1 = False
     debug_2 = False
     debug_3 = False
-    # Thingy for letting players quit the game,
-    # since, I want them to leave me as fast as they can
+    # General event handler, like, quitting game and using debug things.
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -310,14 +309,15 @@ while running:
                     pass
                 else:
                     pass
-        # I don't fucking know why we're initializing all the gui managers HERE
-        # but I guess we need to do it firstly, above everyone else (such a narcissist)
+
+        # Initiate GUI manager, and let it listen to events.
         main_manager.process_events(event)
         menu_manager.process_events(event)
         options_manager.process_events(event)
 
-    # Main game, not menu or other shit
+    # Pretty self explanatory. Just a main game.
     if playing and not options and not main_menu:
+        #Setting player's starting position.
         if not is_in_a_start_position:
             for sprite in player.sprites():
                 sprite.rect.center = buttons[13].rect.center
@@ -329,16 +329,8 @@ while running:
                     if food >= 1:
                         food -= 1
                         hunger += random.randint(10, 25)
-                        hunger_label.hide()
-                        hunger_label = UILabel(pygame.Rect(13, 75, 150, 30),
-                                               text=f'Hunger: {hunger}',
-                                               manager=main_manager,
-                                               container=main_panel)
-                        canned_food.hide()
-                        canned_food = UILabel(pygame.Rect(32, 106, 150, 30),
-                                              text=f'Canned Food: {food}',
-                                              manager=main_manager,
-                                              container=main_panel)
+                        hunger_label.set_text(f'Hunger: {hunger}')
+                        canned_food.set_text(f'Canned Food: {food}')
                     else:
                         pass
                 for button in buttons:
@@ -354,11 +346,7 @@ while running:
                                 walk_sound.play()
                                 hunger -= 1
                                 print(hunger)
-                                hunger_label.hide()
-                                hunger_label = UILabel(pygame.Rect(13, 75, 150, 30),
-                                                       text=f'Hunger: {hunger}',
-                                                       manager=main_manager,
-                                                       container=main_panel)
+                                hunger_label.set_text(f'Hunger: {hunger}')
                                 if hunger >= 50:
                                     health += 1
                                 elif hunger <= 25:
@@ -368,32 +356,39 @@ while running:
 
         # Update menu, since, we NEED to do that.
         main_manager.update(dt)
-        main_panel.update(dt)
+        # Disabled this because we don't use it.
+        #main_panel.update(dt)
 
-        # just so the screen isn't black, yknow?
+        # Fill the background with white color.
         screen.fill((255, 255, 255))  # Use RGB tuple for color
 
-        # Draw rectangles (optional, for visualization)
-        for i in buttons:
-            pygame.draw.rect(screen, 'green', i.rect)
+        # Draw tiles of specific locations.
+        for i in range(len(map_data)):
+            for m in range(len(map_data[i])):
+                tile_position = (start_x + i * (movement_button_width + margin),
+                                 start_y + m * (movement_button_height + margin))
+                if map_data[m][i] == "plains":
+                    screen.blit(plains_tile, tile_position)
+                elif map_data[m][i] == "forest":
+                    screen.blit(forest_time, tile_position)
 
         # Draw UI before the character
         main_manager.draw_ui(screen)
 
-        # draw the main mf who's going to die in the next minute or so
+        # Draw the player above everyone.
         player.draw(screen)
 
     # main menu
     elif main_menu:
         options = False
-        # Just so the player doesn't go insane due to a lot of guitar sounds
+        # Set volume of a music, can be changed.
         if not pygame.mixer.get_busy():
             main_menu_sound.play(-1)
-            # also make it quieter so we don't blow out his ear drums
+            # Make the music quieter.
             main_menu_sound.set_volume(0.5)
         # Update the main menu gui
         menu_manager.update(dt)
-        # Button thingy
+        # Buttons processor.
         for event in pygame.event.get():
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
@@ -422,7 +417,7 @@ while running:
         # Draw UI
         menu_manager.draw_ui(screen)
 
-    # CAUTION! MY SMALL BRAIN STILL DIDN'T FIXED THIS
+    # TODO: FIX Options.
     #elif options:
     #    main_menu = False
     #
@@ -438,11 +433,10 @@ while running:
 
     #    options_manager.draw_ui(screen)
 
-    # Sadly our game is not for australians
+    # Flip the display.
     pygame.display.flip()
-    # Delta time so our character just doesn't go running around
-    # like crazy, at least, if we'll have some animations in future.
+    # Delta Time, like ticks and etc.
     dt = clock.tick(60) / 1000
 
-# Yea-yea, the infinity loop, I'm not into that shit so just end his suffering.
+# When we finish main code - exit the program. Either by pressing X, or QUIT or if some error happens.
 pygame.quit()

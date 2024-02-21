@@ -1,0 +1,6 @@
+/.venv
+/build
+/save_data
+/.idea
+main.spec
+save.json
