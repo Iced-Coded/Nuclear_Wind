@@ -378,7 +378,7 @@ while running:
         # Draw the player above everyone.
         player.draw(screen)
 
-    # main menu
+    # Main menu
     elif main_menu:
         options = False
         # Set volume of a music, can be changed.
