@@ -20,26 +20,29 @@ pygame.display.set_caption("Nuclear Wind 1.0a")
 pygame.display.set_icon(icon)
 
 # Sound library
-hover_sound = pygame.mixer.Sound('data/sounds/hover.wav')
-confirm_sound = pygame.mixer.Sound('data/sounds/Confirm.wav')
-main_menu_sound = pygame.mixer.Sound('data/sounds/mainmenu.mp3')
-hover_sound_1 = pygame.mixer.Sound('data/sounds/main_menu/Retro1.mp3')
-hover_sound_2 = pygame.mixer.Sound('data/sounds/main_menu/Retro2.mp3')
-walk_sound = pygame.mixer.Sound('data/sounds/movement/Steps.wav')
-debug_active_sound = pygame.mixer.Sound('data/sounds/synth.wav')
-power_up_sound = pygame.mixer.Sound('data/sounds/Powerup.wav')
-hurt_sound = pygame.mixer.Sound('data/sounds/Hurt.wav')
+class Sounds_Library:
+    hover_sound = pygame.mixer.Sound('data/sounds/hover.wav')
+    confirm_sound = pygame.mixer.Sound('data/sounds/Confirm.wav')
+    main_menu_sound = pygame.mixer.Sound('data/sounds/mainmenu.mp3')
+    hover_sound_1 = pygame.mixer.Sound('data/sounds/main_menu/Retro1.mp3')
+    hover_sound_2 = pygame.mixer.Sound('data/sounds/main_menu/Retro2.mp3')
+    walk_sound = pygame.mixer.Sound('data/sounds/movement/Steps.wav')
+    debug_active_sound = pygame.mixer.Sound('data/sounds/synth.wav')
+    power_up_sound = pygame.mixer.Sound('data/sounds/Powerup.wav')
+    hurt_sound = pygame.mixer.Sound('data/sounds/Hurt.wav')
 
 # Image library
-bg = pygame.image.load("data/sprites/bg.jpg")
-plains_tile = pygame.transform.smoothscale(pygame.image.load('data/sprites/tiles/plains.png'), (100,100))
-forest_time = pygame.transform.smoothscale(pygame.image.load('data/sprites/tiles/forest.png'), (100,100))
+class Image_Library:
+    bg = pygame.image.load("data/sprites/bg.jpg")
+    plains_tile = pygame.transform.smoothscale(pygame.image.load('data/sprites/tiles/plains.png'), (100,100))
+    forest_time = pygame.transform.smoothscale(pygame.image.load('data/sprites/tiles/forest.png'), (100,100))
 
 # GUI managers
-main_manager = pygame_gui.UIManager((screen_width, screen_height), 'theme.json')
-menu_manager = pygame_gui.UIManager((screen_width, screen_height), 'theme.json')
-options_manager = pygame_gui.UIManager((screen_width, screen_height), 'theme.json')
-text_manager = pygame_gui.UIManager((screen_width, screen_height), 'theme.json')
+class GUIs:
+    main_manager = pygame_gui.UIManager((screen_width, screen_height), 'theme.json')
+    menu_manager = pygame_gui.UIManager((screen_width, screen_height), 'theme.json')
+    options_manager = pygame_gui.UIManager((screen_width, screen_height), 'theme.json')
+    text_manager = pygame_gui.UIManager((screen_width, screen_height), 'theme.json')
 
 # Variables
 clock = pygame.time.Clock()
@@ -96,7 +99,7 @@ for row_idx, row in enumerate(map_data):
                                       movement_button_width,
                                       movement_button_height),
             text=cell,
-            manager=main_manager,
+            manager=GUIs.main_manager,
             object_id=ObjectID(class_id='@movement')
         )
         buttons.append(button)
@@ -113,32 +116,32 @@ for row_idx, row in enumerate(map_data):
 game_name = UILabel(
     relative_rect=pygame.Rect((screen_width - button_width) // 2, 100, button_width, button_height),
     text='Nuclear Winter',
-    manager=menu_manager,
+    manager=GUIs.menu_manager,
     object_id=ObjectID(class_id='@main_label')
 )
 
 start_button = UIButton(
     relative_rect=pygame.Rect((screen_width - button_width) // 2, 250, button_width, button_height),
     text='Start Game',
-    manager=menu_manager
+    manager=GUIs.menu_manager
 )
 
 options_button = UIButton(
     relative_rect=pygame.Rect((screen_width - button_width) // 2, 350, button_width, button_height),
     text='Options',
-    manager=menu_manager
+    manager=GUIs.menu_manager
 )
 
 quit_button = UIButton(
     relative_rect=pygame.Rect((screen_width - button_width) // 2, 450, button_width, button_height),
     text='Quit',
-    manager=menu_manager
+    manager=GUIs.menu_manager
 )
 
 version_label = UILabel(
     relative_rect=pygame.Rect((screen_width - button_width) // 0.1, 500, button_width, button_height),
     text='1.0a',
-    manager=menu_manager
+    manager=GUIs.menu_manager
 )
 
 # END OF MAIN MENU BUTTONS
@@ -148,14 +151,14 @@ version_label = UILabel(
 options_label = UILabel(
     relative_rect=pygame.Rect((screen_width - button_width) // 2, 100, button_width, button_height),
     text='Options',
-    manager=options_manager,
+    manager=GUIs.options_manager,
     object_id=ObjectID(class_id='@main_label')
 )
 
 options_exit_button = UIButton(
     relative_rect=pygame.Rect((screen_width - button_width) // 2, 500, button_width, button_height),
     text='Exit Options',
-    manager=options_manager
+    manager=GUIs.options_manager
 )
 
 # END OF OPTION MENU BUTTONS
@@ -163,26 +166,26 @@ options_exit_button = UIButton(
 # START OF MAIN GAME PANEL
 
 main_panel = UIPanel(pygame.Rect(675, -3, 610, 730),
-                     manager=main_manager)
+                     manager=GUIs.main_manager)
 UILabel(pygame.Rect(245, 10, 150, 30),
         text='Nuclear Wind 1.0a',
-        manager=main_manager,
+        manager=GUIs.main_manager,
         container=main_panel)
 UILabel(pygame.Rect(10, 45, 150, 30),
         text=f'Health: {health}',
-        manager=main_manager,
+        manager=GUIs.main_manager,
         container=main_panel)
 hunger_label = UILabel(pygame.Rect(17, 75, 150, 30),
         text=f'Hunger: {hunger}',
-        manager=main_manager,
+        manager=GUIs.main_manager,
         container=main_panel)
 canned_food = UILabel(pygame.Rect(32, 106, 150, 30),
         text=f'Canned Food: {food}',
-        manager=main_manager,
+        manager=GUIs.main_manager,
         container=main_panel)
 eat_food = UIButton(pygame.Rect(45, 140, 150, 30),
         text='Eat Canned Food',
-        manager=main_manager,
+        manager=GUIs.main_manager,
         container=main_panel)
 
 # END OF MAIN GAME PANEL
@@ -203,7 +206,7 @@ if debug:
     main_menu = False
     playing = True
     options = False
-    debug_active_sound.play()
+    Sounds_Library.debug_active_sound.play()
 
 # Initialize player class and player's sprites (unused)
 class Player(pygame.sprite.Sprite):
@@ -279,31 +282,31 @@ while running:
             if event.key == pygame.K_KP0:
                 if not debug_0 and debug:
                     debug_0 = True
-                    main_manager.set_visual_debug_mode(True)
+                    GUIs.main_manager.set_visual_debug_mode(True)
                 elif debug_0 and debug:
                     debug_0 = False
-                    main_manager.set_visual_debug_mode(False)
+                    GUIs.main_manager.set_visual_debug_mode(False)
             if event.key == pygame.K_KP1:
                 if not debug_1 and debug:
                     debug_1 = True
-                    menu_manager.set_visual_debug_mode(True)
+                    GUIs.menu_manager.set_visual_debug_mode(True)
                 elif debug_1 and debug:
                     debug_1 = False
-                    menu_manager.set_visual_debug_mode(False)
+                    GUIs.menu_manager.set_visual_debug_mode(False)
             if event.key == pygame.K_KP2:
                 if not debug_2 and debug:
                     debug_2 = True
-                    options_manager.set_visual_debug_mode(True)
+                    GUIs.options_manager.set_visual_debug_mode(True)
                 elif debug_2 and debug:
                     debug_2 = False
-                    options_manager.set_visual_debug_mode(False)
+                    GUIs.options_manager.set_visual_debug_mode(False)
             if event.key == pygame.K_KP3:
                 if not debug_3 and debug:
                     debug_3 = True
-                    main_manager.set_visual_debug_mode(True)
+                    GUIs.main_manager.set_visual_debug_mode(True)
                 elif debug_3 and debug:
                     debug_3 = False
-                    main_manager.set_visual_debug_mode(False)
+                    GUIs.main_manager.set_visual_debug_mode(False)
             if event.key == pygame.K_i:
                 if playing:
                     pass
@@ -311,9 +314,9 @@ while running:
                     pass
 
         # Initiate GUI manager, and let it listen to events.
-        main_manager.process_events(event)
-        menu_manager.process_events(event)
-        options_manager.process_events(event)
+        GUIs.main_manager.process_events(event)
+        GUIs.menu_manager.process_events(event)
+        GUIs.options_manager.process_events(event)
 
     # Pretty self explanatory. Just a main game.
     if playing and not options and not main_menu:
@@ -343,7 +346,7 @@ while running:
                             # Check if the distance is within the threshold
                             if dist <= threshold:
                                 sprite.rect.center = button.rect.center
-                                walk_sound.play()
+                                Sounds_Library.walk_sound.play()
                                 hunger -= 1
                                 print(hunger)
                                 hunger_label.set_text(f'Hunger: {hunger}')
@@ -355,9 +358,9 @@ while running:
                                 load(sprite)
 
         # Update menu, since, we NEED to do that.
-        main_manager.update(dt)
+        GUIs.main_manager.update(dt)
         # Disabled this because we don't use it.
-        #main_panel.update(dt)
+        #GUIs.main_panel.update(dt)
 
         # Fill the background with white color.
         screen.fill((255, 255, 255))  # Use RGB tuple for color
@@ -368,12 +371,12 @@ while running:
                 tile_position = (start_x + i * (movement_button_width + margin),
                                  start_y + m * (movement_button_height + margin))
                 if map_data[m][i] == "plains":
-                    screen.blit(plains_tile, tile_position)
+                    screen.blit(Image_Library.plains_tile, tile_position)
                 elif map_data[m][i] == "forest":
-                    screen.blit(forest_time, tile_position)
+                    screen.blit(Image_Library.forest_time, tile_position)
 
         # Draw UI before the character
-        main_manager.draw_ui(screen)
+        GUIs.main_manager.draw_ui(screen)
 
         # Draw the player above everyone.
         player.draw(screen)
@@ -383,39 +386,39 @@ while running:
         options = False
         # Set volume of a music, can be changed.
         if not pygame.mixer.get_busy():
-            main_menu_sound.play(-1)
+            Sounds_Library.main_menu_sound.play(-1)
             # Make the music quieter.
-            main_menu_sound.set_volume(0.5)
+            Sounds_Library.main_menu_sound.set_volume(0.5)
         # Update the main menu gui
-        menu_manager.update(dt)
+        GUIs.menu_manager.update(dt)
         # Buttons processor.
         for event in pygame.event.get():
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == start_button:
                         #print("Start Game")
-                        confirm_sound.play()
-                        main_menu_sound.stop()
+                        Sounds_Library.confirm_sound.play()
+                        Sounds_Library.main_menu_sound.stop()
                         main_menu = False
                         playing = True
                     elif event.ui_element == options_button:
-                        hurt_sound.play()
+                        Sounds_Library.hurt_sound.play()
                         #print("Options")
                         #confirm_sound.play()
                         #main_menu = False
                         #options = True
                     elif event.ui_element == quit_button:
                         #print("Quit!")
-                        confirm_sound.play()
+                        Sounds_Library.confirm_sound.play()
                         running = False
                 elif event.user_type == pygame_gui.UI_BUTTON_ON_HOVERED:
                     if random.randint(0,10) >= 5:
-                        hover_sound_1.play()
+                        Sounds_Library.hover_sound_1.play()
                     else:
-                        hover_sound_2.play()
-        screen.blit(bg, (0, 0))
+                        Sounds_Library.hover_sound_2.play()
+        screen.blit(Image_Library.bg, (0, 0))
         # Draw UI
-        menu_manager.draw_ui(screen)
+        GUIs.menu_manager.draw_ui(screen)
 
     # TODO: FIX Options.
     #elif options:
