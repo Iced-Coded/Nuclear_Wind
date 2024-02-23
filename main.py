@@ -35,7 +35,7 @@ if debug:
 class Sounds_Library:
     hover_sound = pygame.mixer.Sound('data/sounds/hover.wav')
     confirm_sound = pygame.mixer.Sound('data/sounds/Confirm.wav')
-    main_menu_sound = pygame.mixer.Sound('data/sounds/Metro_Exodus_Dawn_of_Hope.mp3')
+    main_menu_sound = pygame.mixer.Sound('data/sounds/mainmenu.mp3')
     hover_sound_1 = pygame.mixer.Sound('data/sounds/main_menu/Retro1.mp3')
     hover_sound_2 = pygame.mixer.Sound('data/sounds/main_menu/Retro2.mp3')
     walk_sound = pygame.mixer.Sound('data/sounds/movement/Steps.wav')
@@ -443,6 +443,8 @@ while running:
                     screen.blit(Image_Library.lake, tile_position)
                 elif map_data[m][i] == "road_right_up":
                     screen.blit(Image_Library.road_left_up, tile_position)
+                else:
+                    screen.blit(Image_Library.plains_tile, tile_position)
 
         # Draw UI before the character
         GUIs.main_manager.draw_ui(screen)
