@@ -1,6 +1,7 @@
 import pygame, pygame_gui, math, random, sys, json
 from pygame_gui.core import ObjectID
 from pygame_gui.elements import UIButton, UILabel, UIPanel
+from datetime import datetime
 
 debug = False
 if sys.gettrace() is None:
@@ -8,8 +9,15 @@ if sys.gettrace() is None:
 else:
     debug = True
 
+now = datetime.now()
+current_time = now.strftime("%H:%M:%S")
+
 # Initializing pygame
 pygame.init()
+
+if debug:
+    with open("log.txt", "a") as f:
+        f.write(f"[{current_time}] Initialized pygame!\n")
 
 # Initial screen manipulations
 screen_width = 1280
@@ -19,11 +27,15 @@ screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("Nuclear Wind 1.0a")
 pygame.display.set_icon(icon)
 
+if debug:
+    with open("log.txt", "w") as f:
+        f.write(f"[{current_time}] Initialized game window\n[{current_time}] Starting to initialize sounds library.\n")
+
 # Sound library
 class Sounds_Library:
     hover_sound = pygame.mixer.Sound('data/sounds/hover.wav')
     confirm_sound = pygame.mixer.Sound('data/sounds/Confirm.wav')
-    main_menu_sound = pygame.mixer.Sound('data/sounds/mainmenu.mp3')
+    main_menu_sound = pygame.mixer.Sound('data/sounds/Metro_Exodus_Dawn_of_Hope.mp3')
     hover_sound_1 = pygame.mixer.Sound('data/sounds/main_menu/Retro1.mp3')
     hover_sound_2 = pygame.mixer.Sound('data/sounds/main_menu/Retro2.mp3')
     walk_sound = pygame.mixer.Sound('data/sounds/movement/Steps.wav')
@@ -31,11 +43,25 @@ class Sounds_Library:
     power_up_sound = pygame.mixer.Sound('data/sounds/Powerup.wav')
     hurt_sound = pygame.mixer.Sound('data/sounds/Hurt.wav')
 
+if debug:
+    with open("log.txt", "a") as f:
+        f.write(f"[{current_time}] Sounds library successfully initialized.\n[{current_time}] Initializing image library.\n")
+
 # Image library
 class Image_Library:
-    bg = pygame.image.load("data/sprites/bg.jpg")
-    plains_tile = pygame.transform.smoothscale(pygame.image.load('data/sprites/tiles/plains.png'), (100,100))
-    forest_time = pygame.transform.smoothscale(pygame.image.load('data/sprites/tiles/forest.png'), (100,100))
+    bg = pygame.transform.smoothscale(pygame.image.load("data/sprites/bg.jpg"), (1280, 720))
+    plains_tile = pygame.transform.smoothscale(pygame.image.load('data/sprites/tiles/plains.png'), (100, 100))
+    forest_time = pygame.transform.smoothscale(pygame.image.load('data/sprites/tiles/forest.png'), (100, 100))
+    road_right = pygame.transform.smoothscale(pygame.image.load('data/sprites/tiles/road_right.png'), (100, 100))
+    road_down = pygame.transform.rotate(road_right, 90)
+    road_up = pygame.transform.flip(road_down, False, True)
+    lake = pygame.transform.smoothscale(pygame.image.load('data/sprites/tiles/lake.png'), (100, 100))
+    road_left_up = pygame.transform.smoothscale(pygame.image.load('data/sprites/tiles/road_turn.png'), (100, 100))
+    road_down_right = pygame.transform.flip(road_left_up, True, True)
+
+if debug:
+    with open("log.txt", "a") as f:
+        f.write(f"[{current_time}] Image library successfully initialized.\n[{current_time}] Initializing GUI Managers\n")
 
 # GUI managers
 class GUIs:
@@ -43,6 +69,10 @@ class GUIs:
     menu_manager = pygame_gui.UIManager((screen_width, screen_height), 'theme.json')
     options_manager = pygame_gui.UIManager((screen_width, screen_height), 'theme.json')
     text_manager = pygame_gui.UIManager((screen_width, screen_height), 'theme.json')
+
+if debug:
+    with open("log.txt", "a") as f:
+        f.write(f"[{current_time}] GUI Managers successfully initialized.\n[{current_time}] Initializing Variables\n")
 
 # Variables
 clock = pygame.time.Clock()
@@ -67,12 +97,12 @@ button_height = 50
 button_list = []
 
 # Map
-map_data = [["forest", "plains", "plains", "road", "forest", "forest"],
-            ["plains", "city", "road", "road", "plains", "forest"],
+map_data = [["forest", "plains", "plains", "road_up", "forest", "forest"],
+            ["plains", "city", "road_right", "road_right_up", "plains", "forest"],
             ["city", "city_center", "forest", "plains", "lake", "plains"],
-            ["forest", "road", "plains", "forest", "forest", "forest"],
-            ["forest", "road", "forest", "plains", "forest", "plains"],
-            ["road", "road", "plains", "hill", "forest", "forest"]]
+            ["forest", "road_down", "plains", "forest", "forest", "forest"],
+            ["forest", "road_down", "forest", "plains", "forest", "plains"],
+            ["road_right", "road", "plains", "hill", "forest", "forest"]]
 
 movement_button_width = 100
 movement_button_height = 100
@@ -88,6 +118,10 @@ def distance(point1, point2):
     return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
 
 # GAME MOVEMENT SYSTEM START
+
+if debug:
+    with open("log.txt", "a") as f:
+        f.write(f"[{current_time}] Variables successfully initialized.\n[{current_time}] Initializing Movement System.\n")
 
 buttons = []
 rects = []
@@ -112,6 +146,10 @@ for row_idx, row in enumerate(map_data):
 # GAME MOVEMENT SYSTEM END
 
 # START OF MAIN MENU BUTTONS
+
+if debug:
+    with open("log.txt", "a") as f:
+        f.write(f"[{current_time}] Movement System successfully initialized.\n[{current_time}] Initializing Main Menu buttons.\n")
 
 game_name = UILabel(
     relative_rect=pygame.Rect((screen_width - button_width) // 2, 100, button_width, button_height),
@@ -148,6 +186,10 @@ version_label = UILabel(
 
 # START OF OPTION MENU BUTTONS
 
+if debug:
+    with open("log.txt", "a") as f:
+        f.write(f"[{current_time}] Main Menu buttons successfully initialized.\n[{current_time}] Initializing Options Menu buttons.\n")
+
 options_label = UILabel(
     relative_rect=pygame.Rect((screen_width - button_width) // 2, 100, button_width, button_height),
     text='Options',
@@ -164,6 +206,10 @@ options_exit_button = UIButton(
 # END OF OPTION MENU BUTTONS
 
 # START OF MAIN GAME PANEL
+
+if debug:
+    with open("log.txt", "a") as f:
+        f.write(f"[{current_time}] Options Menu buttons successfully initialized.\n[{current_time}] Initializing Main Game panel.\n")
 
 main_panel = UIPanel(pygame.Rect(675, -3, 610, 730),
                      manager=GUIs.main_manager)
@@ -207,6 +253,10 @@ if debug:
     playing = True
     options = False
     Sounds_Library.debug_active_sound.play()
+
+if debug:
+    with open("log.txt", "a") as f:
+        f.write(f"[{current_time}] Main Game panel successfully initialized.\n[{current_time}] Initializing Player.\n")
 
 # Initialize player class and player's sprites (unused)
 class Player(pygame.sprite.Sprite):
@@ -347,8 +397,6 @@ while running:
                             if dist <= threshold:
                                 sprite.rect.center = button.rect.center
                                 Sounds_Library.walk_sound.play()
-                                hunger -= 1
-                                print(hunger)
                                 hunger_label.set_text(f'Hunger: {hunger}')
                                 if hunger >= 50:
                                     health += 1
@@ -356,6 +404,17 @@ while running:
                                     health -= random.randint(1, 3)
                                 save(sprite)
                                 load(sprite)
+                                if button.text == "forest":
+                                    hunger -= random.randint(3, 5)
+                                elif button.text == "city":
+                                    hunger -= random.randint(2, 4)
+                                elif button.text == "city_center":
+                                    hunger -= random.randint(4, 6)
+                                elif button.text == "lake":
+                                    hunger -= random.randint(3, 5)
+                                else:
+                                    hunger -= 1
+
 
         # Update menu, since, we NEED to do that.
         GUIs.main_manager.update(dt)
@@ -374,6 +433,16 @@ while running:
                     screen.blit(Image_Library.plains_tile, tile_position)
                 elif map_data[m][i] == "forest":
                     screen.blit(Image_Library.forest_time, tile_position)
+                elif map_data[m][i] == "road_right":
+                    screen.blit(Image_Library.road_right, tile_position)
+                elif map_data[m][i] == "road_down":
+                    screen.blit(Image_Library.road_down, tile_position)
+                elif map_data[m][i] == "road_up":
+                    screen.blit(Image_Library.road_up, tile_position)
+                elif map_data[m][i] == "lake":
+                    screen.blit(Image_Library.lake, tile_position)
+                elif map_data[m][i] == "road_right_up":
+                    screen.blit(Image_Library.road_left_up, tile_position)
 
         # Draw UI before the character
         GUIs.main_manager.draw_ui(screen)
