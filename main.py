@@ -1,19 +1,16 @@
 import json
 import math
 import random
-import sys
 from datetime import datetime
 
-import pygame
 import pygame_gui
 from pygame_gui.core import ObjectID
 from pygame_gui.elements import UIButton, UILabel, UIPanel
 
-debug = False
-if sys.gettrace() is None:
-    pass
-else:
-    debug = True
+# Modules
+from modules.libraries import ImageLibrary, SoundsLibrary
+from modules.map import map_data
+from modules.variables import *
 
 now = datetime.now()
 current_time = now.strftime("%H:%M:%S")
@@ -21,112 +18,26 @@ current_time = now.strftime("%H:%M:%S")
 # Initializing pygame
 pygame.init()
 
-if debug:
-    with open("log.txt", "a") as f:
-        f.write(f"[{current_time}] Initialized pygame!\n")
-
-# Initial screen manipulations
-screen_width = 1280
-screen_height = 720
-icon = pygame.transform.smoothscale(pygame.image.load('snow.png'), (200, 200))
-screen = pygame.display.set_mode((screen_width, screen_height))
-pygame.display.set_caption("Nuclear Wind 1.0a")
-pygame.display.set_icon(icon)
-
-if debug:
-    with open("log.txt", "w") as f:
-        f.write(f"[{current_time}] Initialized game window\n[{current_time}] Starting to initialize sounds library.\n")
-
-
-# Sound library
-class SoundsLibrary:
-    # Sounds, Music and etc
-    hover_sound = pygame.mixer.Sound('data/sounds/hover.wav')
-    confirm_sound = pygame.mixer.Sound('data/sounds/Confirm.wav')
-    main_menu_sound = pygame.mixer.Sound('data/sounds/mainmenu.mp3')
-    hover_sound_1 = pygame.mixer.Sound('data/sounds/main_menu/Retro1.mp3')
-    hover_sound_2 = pygame.mixer.Sound('data/sounds/main_menu/Retro2.mp3')
-    walk_sound = pygame.mixer.Sound('data/sounds/movement/Steps.wav')
-    debug_active_sound = pygame.mixer.Sound('data/sounds/synth.wav')
-    power_up_sound = pygame.mixer.Sound('data/sounds/Powerup.wav')
-    hurt_sound = pygame.mixer.Sound('data/sounds/Hurt.wav')
-    ambient_sound = pygame.mixer.Sound('data/sounds/MoozE-S.A.D.mp3')
-
-    # Sound Channels
-    pygame.mixer.set_num_channels(3)
-    main_channel = pygame.mixer.Channel(0)
-    music_channel = pygame.mixer.Channel(1)
-    ambient_channel = pygame.mixer.Channel(2)
-
-
-if debug:
-    with open("log.txt", "a") as f:
-        f.write(
-            f"[{current_time}] Sounds library successfully initialized.\n[{current_time}] Initializing image library.\n")
-
-
-# Image library
-class Image_Library:
-    bg = pygame.transform.smoothscale(pygame.image.load("data/sprites/bg.jpg"), (1280, 720))
-    plains_tile = pygame.transform.smoothscale(pygame.image.load('data/sprites/tiles/plains.png'), (100, 100))
-    forest_time = pygame.transform.smoothscale(pygame.image.load('data/sprites/tiles/forest.png'), (100, 100))
-    road_right = pygame.transform.smoothscale(pygame.image.load('data/sprites/tiles/road_right.png'), (100, 100))
-    road_down = pygame.transform.rotate(road_right, 90)
-    road_up = pygame.transform.flip(road_down, False, True)
-    lake = pygame.transform.smoothscale(pygame.image.load('data/sprites/tiles/lake.png'), (100, 100))
-    road_left_up = pygame.transform.smoothscale(pygame.image.load('data/sprites/tiles/road_turn.png'), (100, 100))
-    road_down_right = pygame.transform.flip(road_left_up, True, True)
-
-
-if debug:
-    with open("log.txt", "a") as f:
-        f.write(
-            f"[{current_time}] Image library successfully initialized.\n[{current_time}] Initializing GUI Managers\n")
-
 
 # GUI managers
 class GUIs:
-    main_manager = pygame_gui.UIManager((screen_width, screen_height), 'theme.json')
-    menu_manager = pygame_gui.UIManager((screen_width, screen_height), 'theme.json')
-    options_manager = pygame_gui.UIManager((screen_width, screen_height), 'theme.json')
-    text_manager = pygame_gui.UIManager((screen_width, screen_height), 'theme.json')
-    dialogue_manager = pygame_gui.UIManager((screen_width, screen_height), 'theme.json')
+    main_manager = pygame_gui.UIManager((SCREEN_WIDTH, SCREEN_HEIGHT), './theme.json')
+    menu_manager = pygame_gui.UIManager((SCREEN_WIDTH, SCREEN_HEIGHT), './theme.json')
+    options_manager = pygame_gui.UIManager((SCREEN_WIDTH, SCREEN_HEIGHT), './theme.json')
+    text_manager = pygame_gui.UIManager((SCREEN_WIDTH, SCREEN_HEIGHT), './theme.json')
+    dialogue_manager = pygame_gui.UIManager((SCREEN_WIDTH, SCREEN_HEIGHT), './theme.json')
 
 
-if debug:
-    with open("log.txt", "a") as f:
-        f.write(f"[{current_time}] GUI Managers successfully initialized.\n[{current_time}] Initializing Variables\n")
-
-# Variables
 clock = pygame.time.Clock()
-running = True
-playing = False
-main_menu = True
-options = False
-dt = 0
-is_in_a_start_position = False
-is_paused = False
-dialogue = False
 
-# Player var
-health = 100
-hunger = 100
-food = 10
-
-# Buttons and other shit
+# Buttons and other variables
 font_large = pygame.font.Font(None, 36)
 font_small = pygame.font.Font(None, 24)
 button_width = 200
 button_height = 50
 button_list = []
 
-# Map
-map_data = [["forest", "plains", "plains", "road_up", "forest", "forest"],
-            ["plains", "city", "road_right", "road_right_up", "plains", "forest"],
-            ["city", "city_center", "forest", "plains", "lake", "plains"],
-            ["forest", "road_down", "plains", "forest", "forest", "forest"],
-            ["forest", "road_down", "forest", "plains", "forest", "plains"],
-            ["road_right", "road", "plains", "hill", "forest", "forest"]]
+# Movement system addition
 
 movement_button_width = 100
 movement_button_height = 100
@@ -134,21 +45,7 @@ start_x = 35
 start_y = 35
 margin = 2
 
-
-# Movement system addition
-
-def distance(point1, point2):
-    x1, y1 = point1
-    x2, y2 = point2
-    return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
-
-
 # GAME MOVEMENT SYSTEM START
-
-if debug:
-    with open("log.txt", "a") as f:
-        f.write(
-            f"[{current_time}] Variables successfully initialized.\n[{current_time}] Initializing Movement System.\n")
 
 buttons = []
 rects = []
@@ -170,113 +67,96 @@ for row_idx, row in enumerate(map_data):
                            movement_button_height)
         rects.append(rect)
 
-# GAME MOVEMENT SYSTEM END
+
+def distance(point1, point2):
+    x1, y1 = point1
+    x2, y2 = point2
+    return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+
 
 # START OF MAIN MENU BUTTONS
 
-if debug:
-    with open("log.txt", "a") as f:
-        f.write(
-            f"[{current_time}] Movement System successfully initialized.\n[{current_time}] Initializing Main Menu buttons.\n")
+class Main_Menu_Buttons:
+    game_name = UILabel(
+        relative_rect=pygame.Rect((SCREEN_WIDTH - button_width) // 2, 100, button_width, button_height),
+        text='Nuclear Winter',
+        manager=GUIs.menu_manager,
+        object_id=ObjectID(class_id='@main_label')
+    )
 
-game_name = UILabel(
-    relative_rect=pygame.Rect((screen_width - button_width) // 2, 100, button_width, button_height),
-    text='Nuclear Winter',
-    manager=GUIs.menu_manager,
-    object_id=ObjectID(class_id='@main_label')
-)
+    start_button = UIButton(
+        relative_rect=pygame.Rect((SCREEN_WIDTH - button_width) // 2, 250, button_width, button_height),
+        text='Start Game',
+        manager=GUIs.menu_manager
+    )
 
-start_button = UIButton(
-    relative_rect=pygame.Rect((screen_width - button_width) // 2, 250, button_width, button_height),
-    text='Start Game',
-    manager=GUIs.menu_manager
-)
+    options_button = UIButton(
+        relative_rect=pygame.Rect((SCREEN_WIDTH - button_width) // 2, 350, button_width, button_height),
+        text='Options',
+        manager=GUIs.menu_manager
+    )
 
-options_button = UIButton(
-    relative_rect=pygame.Rect((screen_width - button_width) // 2, 350, button_width, button_height),
-    text='Options',
-    manager=GUIs.menu_manager
-)
+    quit_button = UIButton(
+        relative_rect=pygame.Rect((SCREEN_WIDTH - button_width) // 2, 450, button_width, button_height),
+        text='Quit',
+        manager=GUIs.menu_manager
+    )
 
-quit_button = UIButton(
-    relative_rect=pygame.Rect((screen_width - button_width) // 2, 450, button_width, button_height),
-    text='Quit',
-    manager=GUIs.menu_manager
-)
+    version_label = UILabel(
+        relative_rect=pygame.Rect((SCREEN_WIDTH - button_width) // 0.1, 500, button_width, button_height),
+        text='1.0a',
+        manager=GUIs.menu_manager
+    )
 
-version_label = UILabel(
-    relative_rect=pygame.Rect((screen_width - button_width) // 0.1, 500, button_width, button_height),
-    text='1.0a',
-    manager=GUIs.menu_manager
-)
+    debug_label = UILabel(
+        relative_rect=pygame.Rect((SCREEN_WIDTH - button_width) // 0.1, 550, button_width, button_height),
+        text='',
+        manager=GUIs.menu_manager
+    )
 
-debug_label = UILabel(
-    relative_rect=pygame.Rect((screen_width - button_width) // 0.1, 550, button_width, button_height),
-    text='',
-    manager=GUIs.menu_manager
-)
 
-# END OF MAIN MENU BUTTONS
+class Options_Elements:
+    label = UILabel(
+        relative_rect=pygame.Rect((SCREEN_WIDTH - button_width) // 2, 100, button_width, button_height),
+        text='Options',
+        manager=GUIs.options_manager,
+        object_id=ObjectID(class_id='@main_label')
+    )
 
-# START OF OPTION MENU BUTTONS
+    exit_button = UIButton(
+        relative_rect=pygame.Rect((SCREEN_WIDTH - button_width) // 2, 500, button_width, button_height),
+        text='Exit Options',
+        manager=GUIs.options_manager
+    )
 
-if debug:
-    with open("log.txt", "a") as f:
-        f.write(
-            f"[{current_time}] Main Menu buttons successfully initialized.\n[{current_time}] Initializing Options Menu buttons.\n")
 
-options_label = UILabel(
-    relative_rect=pygame.Rect((screen_width - button_width) // 2, 100, button_width, button_height),
-    text='Options',
-    manager=GUIs.options_manager,
-    object_id=ObjectID(class_id='@main_label')
-)
-
-options_exit_button = UIButton(
-    relative_rect=pygame.Rect((screen_width - button_width) // 2, 500, button_width, button_height),
-    text='Exit Options',
-    manager=GUIs.options_manager
-)
-
-# END OF OPTION MENU BUTTONS
-
-# START OF MAIN GAME PANEL
-
-if debug:
-    with open("log.txt", "a") as f:
-        f.write(
-            f"[{current_time}] Options Menu buttons successfully initialized.\n[{current_time}] Initializing Main Game panel.\n")
-
-main_panel = UIPanel(pygame.Rect(675, -3, 610, 730),
-                     manager=GUIs.main_manager)
-UILabel(pygame.Rect(245, 10, 150, 30),
-        text='Nuclear Wind 1.0a',
-        manager=GUIs.main_manager,
-        container=main_panel)
-UILabel(pygame.Rect(10, 45, 150, 30),
-        text=f'Health: {health}',
-        manager=GUIs.main_manager,
-        container=main_panel)
-hunger_label = UILabel(pygame.Rect(17, 75, 150, 30),
-                       text=f'Hunger: {hunger}',
-                       manager=GUIs.main_manager,
-                       container=main_panel)
-canned_food = UILabel(pygame.Rect(32, 106, 150, 30),
-                      text=f'Canned Food: {food}',
-                      manager=GUIs.main_manager,
-                      container=main_panel)
-eat_food = UIButton(pygame.Rect(45, 140, 150, 30),
-                    text='Eat Canned Food',
-                    manager=GUIs.main_manager,
-                    container=main_panel)
-dialogue_button = UIButton(relative_rect=pygame.Rect(45, 170, 150, 30),
-                           text="Talk to NPCs",
+class Main_Panel_Elements:
+    main_panel = UIPanel(pygame.Rect(675, -3, 610, 730),
+                         manager=GUIs.main_manager)
+    UILabel(pygame.Rect(245, 10, 150, 30),
+            text='Nuclear Wind 1.0a',
+            manager=GUIs.main_manager,
+            container=main_panel)
+    UILabel(pygame.Rect(10, 45, 150, 30),
+            text=f'Health: {health}',
+            manager=GUIs.main_manager,
+            container=main_panel)
+    hunger_label = UILabel(pygame.Rect(17, 75, 150, 30),
+                           text=f'Hunger: {hunger}',
                            manager=GUIs.main_manager,
                            container=main_panel)
-
-# END OF MAIN GAME PANEL
-
-# Pause menu
+    canned_food = UILabel(pygame.Rect(32, 106, 150, 30),
+                          text=f'Canned Food: {food}',
+                          manager=GUIs.main_manager,
+                          container=main_panel)
+    eat_food = UIButton(pygame.Rect(45, 140, 150, 30),
+                        text='Eat Canned Food',
+                        manager=GUIs.main_manager,
+                        container=main_panel)
+    dialogue_button = UIButton(relative_rect=pygame.Rect(45, 170, 150, 30),
+                               text="Talk to NPCs",
+                               manager=GUIs.main_manager,
+                               container=main_panel)
 
 # pause_panel_bg = UIPanel(pygame.Rect(0, 0, 360, 480),
 #                      manager=main_manager,
@@ -287,17 +167,6 @@ dialogue_button = UIButton(relative_rect=pygame.Rect(45, 170, 150, 30),
 # Position of a player
 player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
 
-# If debug mode is active then skip main menu
-if debug:
-    main_menu = False
-    playing = True
-    options = False
-    SoundsLibrary.debug_active_sound.play()
-
-if debug:
-    with open("log.txt", "a") as f:
-        f.write(f"[{current_time}] Main Game panel successfully initialized.\n[{current_time}] Initializing Player.\n")
-
 
 # Initialize player class and player's sprites (unused, but, deleting it might break the entire code)
 class Player(pygame.sprite.Sprite):
@@ -305,10 +174,6 @@ class Player(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.image_down = pygame.transform.scale(pygame.image.load('data/sprites/player/alex.png'),
                                                  (width, height))
-        self.image_up = pygame.transform.scale(pygame.image.load('data/sprites/player/up_idle.png'), (width, height))
-        self.image_left = pygame.transform.scale(pygame.image.load('data/sprites/player/side_idle.png'),
-                                                 (width, height))
-        self.image_right = pygame.transform.flip(self.image_left, True, False)
         self.image = self.image_down
         self.rect = self.image.get_rect()
         self.rect.x = player_pos.x
@@ -322,7 +187,7 @@ class Player(pygame.sprite.Sprite):
 player = pygame.sprite.Group()
 player.add(Player(60, 75))
 
-options_button.disable()
+Main_Menu_Buttons.options_button.disable()
 
 # Main game code.
 while running:
@@ -375,34 +240,6 @@ while running:
                 elif options:
                     options = False
                     main_menu = True
-            if event.key == pygame.K_KP0:
-                if not debug_0 and debug:
-                    debug_0 = True
-                    GUIs.main_manager.set_visual_debug_mode(True)
-                elif debug_0 and debug:
-                    debug_0 = False
-                    GUIs.main_manager.set_visual_debug_mode(False)
-            if event.key == pygame.K_KP1:
-                if not debug_1 and debug:
-                    debug_1 = True
-                    GUIs.menu_manager.set_visual_debug_mode(True)
-                elif debug_1 and debug:
-                    debug_1 = False
-                    GUIs.menu_manager.set_visual_debug_mode(False)
-            if event.key == pygame.K_KP2:
-                if not debug_2 and debug:
-                    debug_2 = True
-                    GUIs.options_manager.set_visual_debug_mode(True)
-                elif debug_2 and debug:
-                    debug_2 = False
-                    GUIs.options_manager.set_visual_debug_mode(False)
-            if event.key == pygame.K_KP3:
-                if not debug_3 and debug:
-                    debug_3 = True
-                    GUIs.main_manager.set_visual_debug_mode(True)
-                elif debug_3 and debug:
-                    debug_3 = False
-                    GUIs.main_manager.set_visual_debug_mode(False)
             if event.key == pygame.K_i:
                 if playing:
                     pass
@@ -422,17 +259,19 @@ while running:
             for sprite in player.sprites():
                 sprite.rect.center = buttons[13].rect.center
                 is_in_a_start_position = True
+        else:
+            pass
         # Buttons and other events
         for event in pygame.event.get():
             if event.type == pygame_gui.UI_BUTTON_PRESSED:
-                if event.ui_element == eat_food:
+                if event.ui_element == Main_Panel_Elements.eat_food:
                     if food >= 1 and hunger <= 90:
                         food -= 1
                         hunger += random.randint(10, 25)
                         if hunger > 100:
                             hunger = 100
-                        hunger_label.set_text(f'Hunger: {hunger}')
-                        canned_food.set_text(f'Canned Food: {food}')
+                        Main_Panel_Elements.hunger_label.set_text(f'Hunger: {hunger}')
+                        Main_Panel_Elements.canned_food.set_text(f'Canned Food: {food}')
                     else:
                         pass
                 for button in buttons:
@@ -449,7 +288,7 @@ while running:
                                         button.rect.center[1]):
                                     sprite.rect.center = button.rect.center
                                     SoundsLibrary.walk_sound.play()
-                                    hunger_label.set_text(f'Hunger: {hunger}')
+                                    Main_Panel_Elements.hunger_label.set_text(f'Hunger: {hunger}')
                                     if hunger >= 50:
                                         health += 1
                                     elif hunger <= 25:
@@ -477,7 +316,7 @@ while running:
         # Inside the event loop
         for event in pygame.event.get():
             if event.type == pygame_gui.UI_BUTTON_PRESSED:
-                if event.ui_element == dialogue_button:
+                if event.ui_element == Main_Panel_Elements.dialogue_button:
                     # Check if the player is in the city center
                     if "city_center" in map_data[row_idx][col_idx]:
                         handle_dialogue()
@@ -496,21 +335,21 @@ while running:
                 tile_position = (start_x + i * (movement_button_width + margin),
                                  start_y + m * (movement_button_height + margin))
                 if map_data[m][i] == "plains":
-                    screen.blit(Image_Library.plains_tile, tile_position)
+                    screen.blit(ImageLibrary.plains_tile, tile_position)
                 elif map_data[m][i] == "forest":
-                    screen.blit(Image_Library.forest_time, tile_position)
+                    screen.blit(ImageLibrary.forest_time, tile_position)
                 elif map_data[m][i] == "road_right":
-                    screen.blit(Image_Library.road_right, tile_position)
+                    screen.blit(ImageLibrary.road_right, tile_position)
                 elif map_data[m][i] == "road_down":
-                    screen.blit(Image_Library.road_down, tile_position)
+                    screen.blit(ImageLibrary.road_down, tile_position)
                 elif map_data[m][i] == "road_up":
-                    screen.blit(Image_Library.road_up, tile_position)
+                    screen.blit(ImageLibrary.road_up, tile_position)
                 elif map_data[m][i] == "lake":
-                    screen.blit(Image_Library.lake, tile_position)
+                    screen.blit(ImageLibrary.lake, tile_position)
                 elif map_data[m][i] == "road_right_up":
-                    screen.blit(Image_Library.road_left_up, tile_position)
+                    screen.blit(ImageLibrary.road_left_up, tile_position)
                 else:
-                    screen.blit(Image_Library.plains_tile, tile_position)
+                    screen.blit(ImageLibrary.plains_tile, tile_position)
 
         # Draw UI before the character
         GUIs.main_manager.draw_ui(screen)
@@ -526,28 +365,20 @@ while running:
             SoundsLibrary.main_menu_sound.play(-1)
             # Make the music quieter.
             SoundsLibrary.main_menu_sound.set_volume(0.5)
-        if debug:
-            debug_label.set_text("DEBUG")
         # Update the main menu gui
         GUIs.menu_manager.update(dt)
         # Buttons processor.
         for event in pygame.event.get():
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
-                    if event.ui_element == start_button:
-                        # print("Start Game")
+                    if event.ui_element == Main_Menu_Buttons.start_button:
                         SoundsLibrary.confirm_sound.play()
                         SoundsLibrary.main_menu_sound.stop()
                         main_menu = False
                         playing = True
-                    elif event.ui_element == options_button:
+                    elif event.ui_element == Main_Menu_Buttons.options_button:
                         SoundsLibrary.hurt_sound.play()
-                        # print("Options")
-                        # confirm_sound.play()
-                        # main_menu = False
-                        # options = True
-                    elif event.ui_element == quit_button:
-                        # print("Quit!")
+                    elif event.ui_element == Main_Menu_Buttons.quit_button:
                         SoundsLibrary.confirm_sound.play()
                         running = False
                 elif event.user_type == pygame_gui.UI_BUTTON_ON_HOVERED:
@@ -555,7 +386,7 @@ while running:
                         SoundsLibrary.hover_sound_1.play()
                     else:
                         SoundsLibrary.hover_sound_2.play()
-        screen.blit(Image_Library.bg, (0, 0))
+        screen.blit(ImageLibrary.bg, (0, 0))
         # Draw UI
         GUIs.menu_manager.draw_ui(screen)
 
@@ -575,8 +406,6 @@ while running:
 
     #    options_manager.draw_ui(screen)
 
-    # Flip the display.
-
     if dialogue or playing:
         if not SoundsLibrary.ambient_channel.get_busy():
             SoundsLibrary.ambient_channel.play(SoundsLibrary.ambient_sound, loops=-1)  # loops=-1 for infinite looping
@@ -586,6 +415,7 @@ while running:
     elif dialogue:
         pass
 
+    # Flip the display.
     pygame.display.flip()
     # Delta Time, like ticks and etc.
     dt = clock.tick(60) / 1000
