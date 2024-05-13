@@ -1,7 +1,6 @@
 import json
 import math
 import random
-from datetime import datetime
 
 import pygame_gui
 from pygame_gui.core import ObjectID
@@ -11,9 +10,6 @@ from pygame_gui.elements import UIButton, UILabel, UIPanel
 from modules.libraries import ImageLibrary, SoundsLibrary
 from modules.map import map_data
 from modules.variables import *
-
-now = datetime.now()
-current_time = now.strftime("%H:%M:%S")
 
 # Initializing pygame
 pygame.init()
